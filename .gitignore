@@ -1,0 +1,18 @@
+# --- Secrets: never commit your real API key ---
+.env
+
+# --- Dependencies (not needed here since server.js has zero deps, ---
+# --- but keep this in case you add packages later) ---
+node_modules/
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- OS junk files ---
+.DS_Store
+Thumbs.db
+
+# --- Editor folders (optional - remove this line if you want to ---
+# --- share your VS Code settings/launch configs with the repo) ---
+.vscode/
