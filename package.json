@@ -1,0 +1,12 @@
+{
+  "name": "freestyle-coach-backend",
+  "version": "1.0.0",
+  "description": "Backend for AI Freestyle Coach - generates AI word prompts via the NVIDIA API. Zero dependencies - uses only Node's built-in http and fetch.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Freestyle Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0f;
+    --surface: #16161f;
+    --surface-2: #1d1d28;
+    --border: rgba(255,255,255,0.08);
+    --text: #f4f4f6;
+    --muted: #8a8a96;
+    --accent: #ffb020;
+    --accent-dim: rgba(255,176,32,0.15);
+    --accent-2: #2dd4bf;
+    --accent-2-dim: rgba(45,212,191,0.15);
+    --danger: #ff5470;
+    --radius: 18px;
+    --radius-sm: 10px;
+    --font-display: 'Anton', Impact, sans-serif;
+    --font-ui: 'IBM Plex Mono', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .glow {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(600px circle at 18% 12%, rgba(255,176,32,0.08), transparent 60%),
+      radial-gradient(700px circle at 85% 90%, rgba(45,212,191,0.07), transparent 60%);
+    z-index: 0;
+  }
+
+  .app-shell {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---------- header ---------- */
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .rec-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse-dot 1.6s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,176,32,0.55); }
+    50% { box-shadow: 0 0 0 8px rgba(255,176,32,0); }
+  }
+  .brand h1 {
+    font-family: var(--font-display);
+    font-size: 1.55rem;
+    letter-spacing: 0.06em;
+    margin: 0;
+    font-weight: 400;
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    margin: 2px 0 0;
+    text-transform: uppercase;
+  }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s ease;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: linear-gradient(160deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: 0 20px 60px -30px rgba(0,0,0,0.8);
+  }
+
+  /* ---------- setup form ---------- */
+  .field-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .field-group:last-of-type { margin-bottom: 0; }
+  .field-label {
+    font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); display: flex; align-items: center; gap: 8px; margin: 0;
+  }
+  .field-label .num { color: var(--accent); }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02); color: var(--muted);
+    font-family: var(--font-ui); font-size: 0.78rem; letter-spacing: 0.04em;
+    cursor: pointer; transition: all .15s ease;
+  }
+  .chip:hover { border-color: var(--accent-2); color: var(--text); }
+  .chip.active { background: var(--accent-2-dim); border-color: var(--accent-2); color: var(--accent-2); }
+
+  .text-input {
+    width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border);
+    color: var(--text); padding: 13px 16px; border-radius: var(--radius-sm);
+    font-family: var(--font-ui); font-size: 0.95rem; outline: none;
+    transition: border-color .15s ease;
+  }
+  .text-input::placeholder { color: #5a5a66; }
+  .text-input:focus { border-color: var(--accent); }
+
+  .tempo-row { display: grid; grid-template-columns: 1.1fr 0.8fr 1.4fr; gap: 10px; }
+  .bpm-box {
+    display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px;
+  }
+  .bpm-box input {
+    background: none; border: none; color: var(--text);
+    font-family: var(--font-display); font-size: 1.6rem; width: 100%; outline: none;
+  }
+  .bpm-box span { color: var(--muted); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .tap-btn {
+    border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text);
+    border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.7rem; letter-spacing: 0.08em;
+    cursor: pointer; line-height: 1.4; transition: all .1s ease;
+  }
+  .tap-btn:active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); transform: scale(0.97); }
+  .rate-select {
+    width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border); color: var(--text);
+    border-radius: var(--radius-sm); padding: 0 12px; font-family: var(--font-ui); font-size: 0.78rem;
+    outline: none; cursor: pointer; appearance: none;
+  }
+  .interval-readout { color: var(--muted); font-size: 0.72rem; margin: 4px 0 0; letter-spacing: 0.04em; }
+  .interval-readout b { color: var(--accent-2); }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .switch { position: relative; display: inline-block; width: 46px; height: 26px; cursor: pointer; flex-shrink: 0; }
+  .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .switch .track {
+    position: absolute; inset: 0; background: rgba(255,255,255,0.08);
+    border-radius: 999px; border: 1px solid var(--border); transition: all .2s ease;
+  }
+  .switch .thumb {
+    position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--muted); transition: all .2s ease;
+  }
+  .switch input:checked ~ .track { background: var(--accent-dim); border-color: var(--accent); }
+  .switch input:checked ~ .track .thumb { transform: translateX(20px); background: var(--accent); }
+
+  .start-btn {
+    width: 100%; padding: 18px; border: none; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent), #ff7a3d);
+    color: #1a1006; font-family: var(--font-display); font-size: 1.05rem; letter-spacing: 0.12em;
+    cursor: pointer; transition: transform .12s ease, box-shadow .2s ease;
+    box-shadow: 0 12px 30px -12px rgba(255,176,32,0.5);
+    margin-top: 28px;
+  }
+  .start-btn:hover { transform: translateY(-2px); }
+  .start-btn:active { transform: translateY(0) scale(0.99); }
+  .start-btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+
+  /* ---------- stage ---------- */
+  .stage { position: relative; display: flex; flex-direction: column; gap: 18px; }
+  .stage-top { display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; }
+  .stage-top .live { display: flex; align-items: center; gap: 8px; color: var(--accent); }
+  .stage-top .live .rec-dot { width: 8px; height: 8px; }
+  .stage-stats { display: flex; gap: 16px; }
+  .stage-stats span b { color: var(--text); font-size: 0.78rem; }
+
+  .word-stage {
+    min-height: 180px; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 16px 6px;
+  }
+  .word-display {
+    font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em;
+    font-size: clamp(2.4rem, 13vw, 5.5rem); line-height: 1.05; word-break: break-word;
+  }
+  .word-display.pulse { animation: word-punch 0.32s ease-out; }
+  @keyframes word-punch {
+    0% { opacity: 0; transform: scale(0.82); filter: blur(2px); }
+    60% { opacity: 1; transform: scale(1.04); filter: blur(0); }
+    100% { transform: scale(1); }
+  }
+
+  .progress-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .progress-fill {
+    height: 100%; width: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    transform-origin: left; transform: scaleX(0);
+    box-shadow: 0 0 16px rgba(255,176,32,0.45);
+  }
+
+  .history-row { display: flex; gap: 8px; flex-wrap: wrap; min-height: 28px; }
+  .history-pill {
+    font-size: 0.7rem; letter-spacing: 0.06em; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted); background: rgba(255,255,255,0.02);
+  }
+  .history-pill:first-child { color: var(--accent-2); border-color: var(--accent-2); background: var(--accent-2-dim); }
+
+  .transport { display: flex; gap: 10px; }
+  .transport button {
+    flex: 1; border-radius: var(--radius-sm); border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+    color: var(--text); padding: 14px 8px; font-family: var(--font-ui); font-size: 0.74rem; letter-spacing: 0.08em;
+    display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: all .15s ease;
+  }
+  .transport button svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .transport button:hover { border-color: var(--accent-2); color: var(--accent-2); }
+  .transport .end-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .transport .pause-btn.is-active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- countdown ---------- */
+  .countdown-overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(11,11,15,0.94); border-radius: var(--radius); z-index: 5;
+  }
+  .countdown-num {
+    font-family: var(--font-display); font-size: 5.5rem; color: var(--accent);
+    animation: count-pop 0.55s ease-out;
+  }
+  @keyframes count-pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* ---------- summary ---------- */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0 24px; }
+  .summary-stat { text-align: center; padding: 16px 8px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+  .summary-stat .value { font-family: var(--font-display); font-size: 1.8rem; color: var(--accent-2); }
+  .summary-stat .label { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .summary-actions { display: flex; gap: 10px; }
+  .summary-actions .start-btn { margin-top: 0; }
+
+  /* ---------- toast ---------- */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 20px; font-size: 0.78rem; color: var(--text); opacity: 0; pointer-events: none;
+    transition: all .25s ease; max-width: 90%; text-align: center; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.6); z-index: 20;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.warn { border-color: var(--danger); color: #ffb3c0; }
+
+  .hint { text-align: center; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.06em; margin: 0; }
+  .hint kbd { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: var(--font-ui); }
+
+  .hidden { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rec-dot, .word-display.pulse, .countdown-num { animation: none !important; }
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 20px; }
+    .tempo-row { grid-template-columns: 1fr 1fr; }
+    .tempo-row .rate-select { grid-column: span 2; padding: 12px; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .transport button { font-size: 0.66rem; padding: 12px 4px; }
+  }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <div class="app-shell">
+    <header class="top">
+      <div class="brand">
+        <span class="rec-dot"></span>
+        <div>
+          <h1>Freestyle Coach</h1>
+          <p class="tagline">AI word prompts for your flow</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="fullscreen-btn" aria-label="Toggle fullscreen" title="Fullscreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+          <path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- SETUP -->
+    <section class="card" id="setup-card">
+      <div class="field-group">
+        <label class="field-label"><span class="num">01</span> Mood / theme</label>
+        <div class="chip-row" id="mood-chips">
+          <button type="button" class="chip" data-mood="Hype">Hype</button>
+          <button type="button" class="chip" data-mood="Chill">Chill</button>
+          <button type="button" class="chip" data-mood="Cyberpunk">Cyberpunk</button>
+          <button type="button" class="chip" data-mood="90s Boom Bap">Boom Bap</button>
+          <button type="button" class="chip" data-mood="Trap">Trap</button>
+          <button type="button" class="chip" data-mood="Lo-fi">Lo-fi</button>
+          <button type="button" class="chip" data-mood="Battle / Diss">Battle</button>
+          <button type="button" class="chip" data-mood="Love / R&amp;B">Love</button>
+        </div>
+        <input type="text" class="text-input" id="mood-input" placeholder="...or type your own mood">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label"><span class="num">02</span> Tempo</label>
+        <div class="tempo-row">
+          <div class="bpm-box">
+            <input type="number" id="bpm-input" value="75" min="40" max="220" aria-label="Beats per minute">
+            <span>BPM</span>
+          </div>
+          <button type="button" class="tap-btn" id="tap-btn">TAP<br>TEMPO</button>
+          <select class="rate-select" id="rate-select" aria-label="Word rate">
+            <option value="1">Rapid · 1 beat/word</option>
+            <option value="2">Quick · 2 beats/word</option>
+            <option value="4" selected>Classic · 4 beats/word</option>
+            <option value="8">Chill · 8 beats/word</option>
+          </select>
+        </div>
+        <p class="interval-readout">New word every <b id="interval-readout">3.2s</b></p>
+      </div>
+
+      <div class="field-group">
+        <div class="toggle-row">
+          <label class="field-label" for="sound-toggle"><span class="num">03</span> Cue tick sound</label>
+          <label class="switch">
+            <input type="checkbox" id="sound-toggle" checked>
+            <span class="track"><span class="thumb"></span></span>
+          </label>
+        </div>
+      </div>
+
+      <button class="start-btn" id="start-btn">START SESSION</button>
+    </section>
+
+    <!-- STAGE -->
+    <section class="card stage hidden" id="stage-card">
+      <div class="countdown-overlay hidden" id="countdown-overlay">
+        <div class="countdown-num" id="countdown-num">3</div>
+      </div>
+
+      <div class="stage-top">
+        <div class="live"><span class="rec-dot"></span> LIVE</div>
+        <div class="stage-stats">
+          <span>TIME <b id="stat-time">00:00</b></span>
+          <span>WORDS <b id="stat-words">0</b></span>
+          <span>BPM <b id="stat-bpm">75</b></span>
+        </div>
+      </div>
+
+      <div class="word-stage">
+        <div class="word-display" id="word-display" aria-live="polite">READY</div>
+      </div>
+
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+      <div class="history-row" id="history-row"></div>
+
+      <div class="transport">
+        <button class="pause-btn" id="pause-btn">
+          <svg id="pause-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+          <span id="pause-label">PAUSE</span>
+        </button>
+        <button class="skip-btn" id="skip-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 4l9 8-9 8V4z"/><path d="M19 5v14"/>
+          </svg>
+          SKIP
+        </button>
+        <button class="end-btn" id="end-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="5" width="14" height="14" rx="2"/>
+          </svg>
+          END
+        </button>
+      </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section class="card hidden" id="summary-card">
+      <label class="field-label"><span class="num">●</span> Session complete</label>
+      <div class="summary-grid">
+        <div class="summary-stat"><div class="value" id="sum-time">00:00</div><div class="label">Duration</div></div>
+        <div class="summary-stat"><div class="value" id="sum-words">0</div><div class="label">Words</div></div>
+        <div class="summary-stat"><div class="value" id="sum-wpm">0</div><div class="label">Words / min</div></div>
+      </div>
+      <div class="summary-actions">
+        <button class="start-btn" id="again-btn" style="background: linear-gradient(135deg, var(--accent-2), #1aa89c); color:#04201d;">PRACTICE AGAIN</button>
+        <button class="start-btn" id="new-settings-btn" style="background: rgba(255,255,255,0.06); color: var(--text); box-shadow:none;">NEW SETTINGS</button>
+      </div>
+    </section>
+
+    <p class="hint">While live: <kbd>Space</kbd> pause/resume &nbsp;·&nbsp; <kbd>&rarr;</kbd> skip &nbsp;·&nbsp; <kbd>Esc</kbd> end session</p>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const API_URL = 'http://localhost:3000/api/freestyle';
+
+  // Offline practice word bank, used if the AI backend can't be reached.
+  const FALLBACK_WORDS = [
+    'FIRE','FLOW','MIC','BEAT','RHYTHM','HUSTLE','GRIND','VISION','DREAM','HORIZON',
+    'SHADOW','ECHO','THUNDER','LIGHTNING','GALAXY','NEON','CHROME','VELVET','WHISPER','CONCRETE',
+    'CROWN','THRONE','LEGACY','HUNGER','PHOENIX','MIRROR','MAZE','COMPASS','ANCHOR','DRIFT',
+    'PULSE','SPARK','EMBER','FROST','STORM','RIVER','MOUNTAIN','ORIGIN','REBEL','OUTLAW',
+    'VELOCITY','GRAVITY','ECLIPSE','COSMIC','SIGNAL','STATIC','CIRCUIT','VOLTAGE','PROPHET','ORACLE',
+    'CIPHER','RIDDLE','TRUTH','ILLUSION','MIRAGE','CANVAS','RHYME','VERSE','LEGEND','GLORY',
+    'TRIUMPH','BATTLE','ARMOR','BLADE','ARROW','TARGET','MOMENTUM','ASCEND','ORBIT','TIDE',
+    'WAVE','CURRENT','MAGNET','QUANTUM','PIXEL','GLITCH','HOLOGRAM','VORTEX','NEBULA','COMET',
+    'EMPIRE','DYNASTY','KINGDOM','REALM','FRONTIER','PIONEER','NOMAD','WANDERER','HUNTER','WARRIOR',
+    'GHOST','PHANTOM','RAVEN','WOLF','FALCON','VIPER','DRAGON','TITAN','SUMMIT','ZENITH'
+  ];
+
+  // ---------- DOM refs ----------
+  const moodChips = document.querySelectorAll('#mood-chips .chip');
+  const moodInput = document.getElementById('mood-input');
+  const bpmInput = document.getElementById('bpm-input');
+  const tapBtn = document.getElementById('tap-btn');
+  const rateSelect = document.getElementById('rate-select');
+  const intervalReadout = document.getElementById('interval-readout');
+  const soundToggle = document.getElementById('sound-toggle');
+  const startBtn = document.getElementById('start-btn');
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+  const setupCard = document.getElementById('setup-card');
+  const stageCard = document.getElementById('stage-card');
+  const summaryCard = document.getElementById('summary-card');
+
+  const countdownOverlay = document.getElementById('countdown-overlay');
+  const countdownNum = document.getElementById('countdown-num');
+
+  const wordDisplay = document.getElementById('word-display');
+  const progressFill = document.getElementById('progress-fill');
+  const historyRow = document.getElementById('history-row');
+  const statTime = document.getElementById('stat-time');
+  const statWords = document.getElementById('stat-words');
+  const statBpm = document.getElementById('stat-bpm');
+
+  const pauseBtn = document.getElementById('pause-btn');
+  const pauseIcon = document.getElementById('pause-icon');
+  const pauseLabel = document.getElementById('pause-label');
+  const skipBtn = document.getElementById('skip-btn');
+  const endBtn = document.getElementById('end-btn');
+
+  const sumTime = document.getElementById('sum-time');
+  const sumWords = document.getElementById('sum-words');
+  const sumWpm = document.getElementById('sum-wpm');
+  const againBtn = document.getElementById('again-btn');
+  const newSettingsBtn = document.getElementById('new-settings-btn');
+
+  const toast = document.getElementById('toast');
+
+  // ---------- state ----------
+  const state = {
+    mood: 'Hype',
+    bpm: 75,
+    rate: 4,
+    intervalMs: 3200,
+    soundOn: true,
+    queue: [],
+    history: [],
+    wordCount: 0,
+    startTime: 0,
+    pausedAt: 0,
+    pausedTotal: 0,
+    isPaused: false,
+    isRefilling: false,
+    wordTimer: null,
+    clockTimer: null,
+    audioCtx: null,
+  };
+  let progressAnim = null;
+  let remainingMs = 0;
+
+  // ---------- helpers ----------
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function showToast(message, warn) {
+    toast.textContent = message;
+    toast.classList.toggle('warn', !!warn);
+    toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toast.classList.remove('show'), 4500);
+  }
+
+  function computeInterval() {
+    return Math.max(400, Math.round((60000 / state.bpm) * state.rate));
+  }
+
+  function updateIntervalReadout() {
+    state.intervalMs = computeInterval();
+    intervalReadout.textContent = (state.intervalMs / 1000).toFixed(1) + 's';
+  }
+
+  function ensureAudio() {
+    if (!state.audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) state.audioCtx = new Ctx();
+    }
+    if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume();
+  }
+
+  function playTick(freq, duration, gain) {
+    if (!state.soundOn || !state.audioCtx) return;
+    const ctx = state.audioCtx;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    g.gain.value = gain;
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+    osc.stop(ctx.currentTime + duration);
+  }
+
+  // ---------- mood chips ----------
+  moodChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      moodChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      moodInput.value = chip.dataset.mood;
+    });
+  });
+  moodInput.addEventListener('input', () => moodChips.forEach(c => c.classList.remove('active')));
+
+  // ---------- tempo controls ----------
+  bpmInput.addEventListener('input', () => {
+    let v = parseInt(bpmInput.value, 10);
+    if (isNaN(v)) v = 75;
+    state.bpm = Math.min(220, Math.max(40, v));
+    updateIntervalReadout();
+  });
+  rateSelect.addEventListener('change', () => {
+    state.rate = parseInt(rateSelect.value, 10);
+    updateIntervalReadout();
+  });
+  updateIntervalReadout();
+
+  let tapTimes = [];
+  tapBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (tapTimes.length && now - tapTimes[tapTimes.length - 1] > 2000) tapTimes = [];
+    tapTimes.push(now);
+    if (tapTimes.length > 5) tapTimes.shift();
+    if (tapTimes.length >= 2) {
+      const intervals = [];
+      for (let i = 1; i < tapTimes.length; i++) intervals.push(tapTimes[i] - tapTimes[i - 1]);
+      const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      const bpm = Math.min(220, Math.max(40, Math.round(60000 / avg)));
+      bpmInput.value = bpm;
+      state.bpm = bpm;
+      updateIntervalReadout();
+    }
+  });
+
+  // ---------- sound toggle ----------
+  soundToggle.addEventListener('change', () => { state.soundOn = soundToggle.checked; });
+
+  // ---------- fullscreen ----------
+  fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+
+  // ---------- fetching words ----------
+  function tempoLabel() {
+    let feel = 'steady flow';
+    if (state.intervalMs < 800) feel = 'rapid-fire';
+    else if (state.intervalMs < 1500) feel = 'quick';
+    else if (state.intervalMs > 3500) feel = 'relaxed, spacious';
+    return state.bpm + ' BPM, ' + feel + ', new word every ' + (state.intervalMs / 1000).toFixed(1) + 's';
+  }
+
+  async function fetchWords(mood, tempo) {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mood, tempo })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || ('Server responded ' + res.status));
+      }
+      const data = await res.json();
+      if (!data.words || !data.words.length) throw new Error('Empty word list');
+      return { words: data.words, fromAI: true };
+    } catch (e) {
+      return { words: shuffle([...FALLBACK_WORDS]), fromAI: false, error: e.message };
+    }
+  }
+
+  async function maybeRefill() {
+    if (state.isRefilling || state.queue.length > 8) return;
+    state.isRefilling = true;
+    const { words } = await fetchWords(state.mood, tempoLabel());
+    state.queue = shuffle([...state.queue, ...words]);
+    state.isRefilling = false;
+  }
+
+  // ---------- session flow ----------
+  async function startSession() {
+    state.mood = (moodInput.value || 'Hype').trim();
+    state.bpm = Math.min(220, Math.max(40, parseInt(bpmInput.value, 10) || 75));
+    state.rate = parseInt(rateSelect.value, 10);
+    state.soundOn = soundToggle.checked;
+    state.history = [];
+    state.wordCount = 0;
+    state.pausedTotal = 0;
+    state.isPaused = false;
+    updateIntervalReadout();
+    ensureAudio();
+
+    startBtn.disabled = true;
+    startBtn.textContent = 'TUNING IN...';
+
+    const { words, fromAI } = await fetchWords(state.mood, tempoLabel());
+    state.queue = shuffle(words);
+    if (!fromAI) showToast("Couldn't reach the AI coach — practicing with the offline word bank.", true);
+
+    setupCard.classList.add('hidden');
+    summaryCard.classList.add('hidden');
+    stageCard.classList.remove('hidden');
+    statBpm.textContent = state.bpm;
+    statWords.textContent = '0';
+    statTime.textContent = '00:00';
+    historyRow.innerHTML = '';
+    wordDisplay.textContent = '';
+    wordDisplay.classList.remove('pulse');
+    progressFill.style.transform = 'scaleX(0)';
+    setPauseUI(false);
+    pauseBtn.classList.remove('is-active');
+
+    await runCountdown();
+
+    startBtn.disabled = false;
+    startBtn.textContent = 'START SESSION';
+
+    state.startTime = Date.now();
+    state.clockTimer = setInterval(updateClock, 250);
+
+    nextWord();
+    state.wordTimer = setInterval(nextWord, state.intervalMs);
+  }
+
+  function runCountdown() {
+    return new Promise(resolve => {
+      countdownOverlay.classList.remove('hidden');
+      const seq = ['3', '2', '1', 'GO!'];
+      let i = 0;
+      function step() {
+        countdownNum.textContent = seq[i];
+        countdownNum.style.animation = 'none';
+        void countdownNum.offsetWidth;
+        countdownNum.style.animation = '';
+        playTick(seq[i] === 'GO!' ? 1320 : 660, 0.08, 0.1);
+        i++;
+        if (i < seq.length) {
+          setTimeout(step, 550);
+        } else {
+          setTimeout(() => { countdownOverlay.classList.add('hidden'); resolve(); }, 400);
+        }
+      }
+      step();
+    });
+  }
+
+  function nextWord() {
+    if (state.queue.length === 0) state.queue = shuffle([...FALLBACK_WORDS]);
+    const word = state.queue.pop();
+
+    wordDisplay.textContent = word;
+    wordDisplay.classList.remove('pulse');
+    void wordDisplay.offsetWidth;
+    wordDisplay.classList.add('pulse');
+
+    state.history.unshift(word);
+    if (state.history.length > 6) state.history.pop();
+    renderHistory();
+
+    state.wordCount++;
+    statWords.textContent = state.wordCount;
+
+    playTick(880, 0.04, 0.05);
+
+    if (progressAnim) progressAnim.cancel();
+    progressFill.style.transform = 'scaleX(1)';
+    progressAnim = progressFill.animate(
+      [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }],
+      { duration: state.intervalMs, easing: 'linear', fill: 'forwards' }
+    );
+
+    maybeRefill();
+  }
+
+  function renderHistory() {
+    historyRow.innerHTML = '';
+    state.history.forEach((w, idx) => {
+      const pill = document.createElement('span');
+      pill.className = 'history-pill';
+      pill.textContent = w;
+      pill.style.opacity = Math.max(0.25, 1 - idx * 0.18);
+      historyRow.appendChild(pill);
+    });
+  }
+
+  function updateClock() {
+    const now = state.isPaused ? state.pausedAt : Date.now();
+    const elapsed = Math.max(0, now - state.startTime - state.pausedTotal);
+    const secs = Math.floor(elapsed / 1000);
+    statTime.textContent = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0');
+  }
+
+  function setPauseUI(isPaused) {
+    if (isPaused) {
+      pauseIcon.innerHTML = '<path d="M5 3l14 9-14 9V3z"/>';
+      pauseLabel.textContent = 'RESUME';
+    } else {
+      pauseIcon.innerHTML = '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>';
+      pauseLabel.textContent = 'PAUSE';
+    }
+  }
+
+  function togglePause() {
+    if (!state.isPaused) {
+      state.isPaused = true;
+      clearInterval(state.wordTimer);
+      clearTimeout(state.wordTimer);
+      if (progressAnim) {
+        remainingMs = Math.max(0, progressAnim.effect.getTiming().duration - progressAnim.currentTime);
+        progressAnim.pause();
+      }
+      state.pausedAt = Date.now();
+      pauseBtn.classList.add('is-active');
+      setPauseUI(true);
+    } else {
+      state.isPaused = false;
+      state.pausedTotal += Date.now() - state.pausedAt;
+      if (progressAnim) progressAnim.play();
+      state.wordTimer = setTimeout(() => {
+        nextWord();
+        state.wordTimer = setInterval(nextWord, state.intervalMs);
+      }, remainingMs);
+      pauseBtn.classList.remove('is-active');
+      setPauseUI(false);
+    }
+  }
+
+  function skipWord() {
+    if (state.isPaused) return;
+    clearInterval(state.wordTimer);
+    clearTimeout(state.wordTimer);
+    nextWord();
+    state.wordTimer = setInterval(nextWord, state.intervalMs);
+  }
+
+  function endSession() {
+    clearInterval(state.wordTimer);
+    clearTimeout(state.wordTimer);
+    clearInterval(state.clockTimer);
+    if (progressAnim) progressAnim.cancel();
+
+    const now = state.isPaused ? state.pausedAt : Date.now();
+    const secs = Math.max(1, Math.floor((now - state.startTime - state.pausedTotal) / 1000));
+    sumTime.textContent = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0');
+    sumWords.textContent = state.wordCount;
+    sumWpm.textContent = Math.round((state.wordCount / secs) * 60);
+
+    stageCard.classList.add('hidden');
+    summaryCard.classList.remove('hidden');
+  }
+
+  // ---------- wire up ----------
+  startBtn.addEventListener('click', startSession);
+  pauseBtn.addEventListener('click', togglePause);
+  skipBtn.addEventListener('click', skipWord);
+  endBtn.addEventListener('click', endSession);
+  againBtn.addEventListener('click', () => { summaryCard.classList.add('hidden'); startSession(); });
+  newSettingsBtn.addEventListener('click', () => { summaryCard.classList.add('hidden'); setupCard.classList.remove('hidden'); });
+
+  document.addEventListener('keydown', e => {
+    if (stageCard.classList.contains('hidden')) return;
+    if (e.code === 'Space') { e.preventDefault(); togglePause(); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); skipWord(); }
+    else if (e.code === 'Escape') { e.preventDefault(); endSession(); }
+  });
+</script>
+</body>
+</html>
